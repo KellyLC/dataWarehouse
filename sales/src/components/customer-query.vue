@@ -45,14 +45,14 @@
                                     <el-submenu index="1-1-3">
                                         <span slot="title">根据月份查询</span>
                                         <el-menu-item index="1-1-3-1">
-                                            <el-date-picker @change="emptySearchingParams('month')" v-model="month" style="width: 200px" align="right" type="month" placeholder="选择一个月份" size="small" :picker-options="pickerOption" default-value="2017-12-12" value-format="yyyy-mm">
+                                            <el-date-picker @change="emptySearchingParams('month')" v-model="month" style="width: 200px" align="right" type="month" placeholder="选择一个月份" size="small" :picker-options="pickerOption" default-value="2017-12-12" value-format="yyyy-MM">
                                             </el-date-picker>
                                         </el-menu-item>
                                     </el-submenu>
                                     <el-submenu index="1-1-4">
                                         <span slot="title">根据星期查询</span>
                                         <el-menu-item index="1-1-4-1">
-                                            <el-date-picker @change="emptySearchingParams('date')" v-model="weekdayOfYearMonth" style="width: 200px" align="right" type="month" format="yyyy-mm" placeholder="选择一个年份" size="small" :picker-options="pickerOption" value-format="yyyy-mm">
+                                            <el-date-picker @change="emptySearchingParams('date')" v-model="weekdayOfYearMonth" style="width: 200px" align="right" type="month" format="yyyy-MM" placeholder="选择一个年份" size="small" :picker-options="pickerOption" value-format="yyyy-MM">
                                             </el-date-picker>
                                         </el-menu-item>
                                         <el-checkbox-group v-model="weekday" @change="emptySearchingParams('date')">
@@ -97,8 +97,7 @@
                                     <span slot="title">按导演名称查询</span>
                                     <el-menu-item-group title="输入导演名称进行查询">
                                         <el-menu-item index="1-3-1">
-                                            <el-input @change="emptySearchingParams('director')" placeholder="导演" prefix-icon="el-icon-search" v-model="inputDirector" size="small">
-                                            </el-input>
+                                            <el-autocomplete v-model="inputDirector" @select="handleSelect" @change.native="emptySearchingParams('director')" prefix-icon="el-icon-search" :fetch-suggestions="querySearch" placeholder="导演" :trigger-on-focus="false" size="small"></el-autocomplete>
                                         </el-menu-item>
                                     </el-menu-item-group>
                                 </el-submenu>
@@ -108,8 +107,7 @@
                                     <span slot="title">按演员名称查询</span>
                                     <el-menu-item-group title="输入参演人员名称进行查询">
                                         <el-menu-item index="1-4-1">
-                                            <el-input @change="emptySearchingParams('actor')" placeholder="演员" prefix-icon="el-icon-search" v-model="inputActor" size="small">
-                                            </el-input>
+                                            <el-autocomplete v-model="inputActor" @select="handleSelect" @change.native="emptySearchingParams('actor')" prefix-icon="el-icon-search" :fetch-suggestions="querySearch" placeholder="演员" :trigger-on-focus="false" size="small"></el-autocomplete>
                                         </el-menu-item>
                                     </el-menu-item-group>
                                 </el-submenu>
@@ -119,29 +117,68 @@
                                     <span slot="title">按电影类型查询</span>
                                     <el-menu-item-group title="输入电影类型进行查询">
                                         <el-menu-item index="1-5-1">
-                                            <el-input @change="emptySearchingParams('type')" placeholder="电影类型" prefix-icon="el-icon-search" v-model="inputType" size="small">
-                                            </el-input>
+                                            <el-autocomplete v-model="inputType" @select="handleSelect" @change.native="emptySearchingParams('type')" prefix-icon="el-icon-search" :fetch-suggestions="querySearch" placeholder="电影类型" :trigger-on-focus="false" size="small"></el-autocomplete>
                                         </el-menu-item>
                                     </el-menu-item-group>
                                 </el-submenu>
                             </el-menu-item-group>
                             <el-menu-item-group>
                                 <el-submenu index="1-6">
-                                    <span slot="title">组合查询</span>
-                                    <el-menu-item-group title="高级查询">
-                                        <el-menu-item index="1-6-1">
-                                            <el-input @change="emptySearchingParams('combinedSearch')" placeholder="导演" prefix-icon="el-icon-search" v-model="combinedSearch.director" size="small" style="width: 200px">
-                                            </el-input>
-                                        </el-menu-item>
-                                        <el-menu-item index="1-6-2">
-                                            <el-input @change="emptySearchingParams('combinedSearch')" placeholder="演员" prefix-icon="el-icon-search" v-model="combinedSearch.actor" size="small" style="width: 200px">
-                                            </el-input>
-                                        </el-menu-item>
-                                        <el-menu-item index="1-6-3">
-                                            <el-date-picker @change="emptySearchingParams('combinedSearch')" v-model="combinedSearch.year" style="width: 200px" align="right" type="year" placeholder="不限" size="small" :picker-options="pickerOption" default-value="2017-12-12">
-                                            </el-date-picker>
+                                    <span slot="title">按电影排名查询</span>
+                                    <el-menu-item-group title="选择电影排名下限（0-25000名）">
+                                        <el-menu-item index="1-7-1">
+                                            <el-input-number v-model="inputRank.min" @change="emptySearchingParams('rank')" :min="0" :max="25000" size="small"></el-input-number>
                                         </el-menu-item>
                                     </el-menu-item-group>
+                                    <el-menu-item-group title="选择电影排名上限（0-25000名）">
+                                        <el-menu-item index="1-7-2">
+                                            </el-input>
+                                            <el-input-number v-model="inputRank.max" @change="emptySearchingParams('rank')" :min="inputRank.min" :max="25000" size="small"></el-input-number>
+                                        </el-menu-item>
+                                    </el-menu-item-group>
+                                </el-submenu>
+                            </el-menu-item-group>
+                            <el-menu-item-group>
+                                <el-submenu index="1-7">
+                                    <span slot="title">按电影评分查询</span>
+                                    <el-menu-item-group title="选择电影评分下限（0-50分）">
+                                        <el-menu-item index="1-7-1">
+                                            <el-input-number v-model="inputMark.min" @change="emptySearchingParams('mark')" :min="0" :max="50" size="small"></el-input-number>
+                                        </el-menu-item>
+                                    </el-menu-item-group>
+                                    <el-menu-item-group title="选择电影评分上限（0-50分）">
+                                        <el-menu-item index="1-7-2">
+                                            <el-input-number v-model="inputMark.max" @change="emptySearchingParams('mark')" :min="inputMark.min" :max="50" size="small"></el-input-number>
+                                        </el-menu-item>
+                                    </el-menu-item-group>
+                                </el-submenu>
+                            </el-menu-item-group>
+                            <el-menu-item-group>
+                                <el-submenu index="1-8">
+                                    <span slot="title">组合查询</span>
+                                    <el-submenu index="1-8-1">
+                                        <span slot="title">高级查询1</span>
+                                        <el-menu-item-group title="按演员和导演进行查询">
+                                            <el-menu-item index="1-8-1-1">
+                                                <el-autocomplete v-model="combinedSearch1.director" @select="handleSelect" @change.native="emptySearchingParams('combinedSearch1')" prefix-icon="el-icon-search" :fetch-suggestions="querySearch" placeholder="导演" :trigger-on-focus="false" size="small"></el-autocomplete>
+                                            </el-menu-item>
+                                            <el-menu-item index="1-8-1-2">
+                                                <el-autocomplete v-model="combinedSearch1.actor" @select="handleSelect" @change.native="emptySearchingParams('combinedSearch1')" prefix-icon="el-icon-search" :fetch-suggestions="querySearch" placeholder="演员" :trigger-on-focus="false" size="small"></el-autocomplete>
+                                            </el-menu-item>
+                                        </el-menu-item-group>
+                                    </el-submenu>
+                                    <el-submenu index="1-8-2">
+                                        <span slot="title">高级查询2</span>
+                                        <el-menu-item-group title="按演员和年份进行查询">
+                                            <el-menu-item index="1-8-2-1">
+                                                <el-autocomplete v-model="combinedSearch2.actor" @select="handleSelect" @change.native="emptySearchingParams('combinedSearch2')" prefix-icon="el-icon-search" :fetch-suggestions="querySearch" placeholder="演员" :trigger-on-focus="false" size="small"></el-autocomplete>
+                                            </el-menu-item>
+                                            <el-menu-item index="1-8-2-2">
+                                                <el-date-picker @change="emptySearchingParams('combinedSearch2')" v-model="combinedSearch2.year" style="width: 172px;" type="year" placeholder="选择一个年份" size="small" :picker-options="pickerOption" default-value="2017-12-12" value-format="yyyy">
+                                                </el-date-picker>
+                                            </el-menu-item>
+                                        </el-menu-item-group>
+                                    </el-submenu>
                                 </el-submenu>
                             </el-menu-item-group>
                             <el-button size="default" type="text" style="position: relative; margin: 0 5%; float: right" @click="searchMovies">查询</el-button>
@@ -159,12 +196,12 @@
                     </el-menu>
                 </el-aside>
                 <el-main>
-                    <!-- <div id="timeChart">
-                                        <query-time-chart></query-time-chart>
-                                    </div> -->
+                    <div v-if="ifChartShows" style="height: 60%">
+                        <query-time-chart :queryTimes="queryTimes" :total="total"></query-time-chart>
+                    </div>
                     <el-collapse-transition>
                         <div v-show="ifMovieQueryShow">
-                            <el-table :data="searchResult" style="width: 100%; text-align: left">
+                            <el-table v-loading="loading" :height="700" :data="searchResult" style="width: 100%; text-align: left">
                                 <el-table-column type="expand">
                                     <div slot-scope="searchResult">
                                         <el-form label-position="left">
@@ -191,6 +228,9 @@
                                             </el-form-item>
                                             <el-form-item label="快照id：">
                                                 <span>{{ searchResult.row.snapshot_id }}</span>
+                                            </el-form-item>
+                                            <el-form-item v-if="ifSearchByOtherFactors" label="所有数据：">
+                                                <span>{{ searchResult.row }}</span>
                                             </el-form-item>
                                         </el-form>
                                     </div>
@@ -322,10 +362,21 @@
                 inputDirector: '',
                 inputActor: '',
                 inputType: '',
-                combinedSearch: {
+                inputRank: {
+                    min: 0,
+                    max: 0
+                },
+                inputMark: {
+                    min: 0,
+                    max: 0
+                },
+                combinedSearch1: {
                     director: '',
-                    actor: '',
-                    year: ''
+                    actor: ''
+                },
+                combinedSearch2: {
+                    year: '',
+                    actor: ''
                 },
                 searchResult: [],
                 paramFlags: [],
@@ -343,7 +394,21 @@
                     newPwd: ''
                 },
                 dialogImageUrl: '',
-                queryTimes: [],
+                queryTimes: [{
+                    databaseType: 'MySQL',
+                    queryTime: 0
+                }, {
+                    databaseType: 'Hive',
+                    queryTime: 0
+                }, {
+                    databaseType: 'HBase',
+                    queryTime: 0
+                }],
+                ifSearchByOtherFactors: false,
+                ifClickSuggestionList: false,
+                loading: false,
+                ifChartShows: false,
+                total: 0,
             }
         },
         components: {
@@ -356,8 +421,150 @@
                 var flags = self.paramFlags
                 //清空上次搜索结果
                 this.searchResult = []
-                this.queryTimes = []
+                //清空上次记录的查询时间
+                for (var i = 0; i < this.queryTimes.length; i++) {
+                    this.queryTimes[i].queryTime = 0
+                }
+                this.queryTimes[1].databaseType = 'Hive'
+                //增加遮罩
+                this.loading = true
+                //清空图像
+                this.ifChartShows = false
+                //根据其他因素查询电影
+                function searchMoviesAccordingToOtherFactors(urlBottom, data) {
+                    self.ifSearchByOtherFactors = true
+                    //使用mysql查询获取数据和查询时间
+                    $.ajax({
+                        crossDomain: true,
+                        contentType: 'application/json;charset=UTF-8',
+                        url: self.urlHeader + '/api/m/' + urlBottom,
+                        data: data,
+                        type: 'post',
+                        success: function(data) {
+                            console.log(data)
+                            //拿到数据
+                            if (data.movies) {
+                                self.searchResult = data.movies
+                            } else if (data.movie) {
+                                self.searchResult = data.movie
+                            } else {
+                                self.searchResult = data.staring
+                                for (var i in data.supporting) {
+                                    self.searchResult.push(i)
+                                }
+                            }
+                            //拿到查询花费时间
+                            self.queryTimes[0].queryTime = parseInt(data.queryTime.substring(0, data.queryTime.length - 2))
+                            //裁剪数据至50条
+                            self.total = self.searchResult.length
+                            if (self.searchResult.length > 50) {
+                                self.searchResult = self.searchResult.slice(0, 49)
+                            }
+                            //检查是否HBase无法进行查询
+                            if (self.queryTimes[2].databaseType != "HBase") {
+                                    self.ifChartShows = true
+                                    self.loading = false
+                                }
+                        },
+                        error: function(err) {
+                            console.log(err)
+                        },
+                        dataType: 'json',
+                    })
+                    //HBASE查询获取查询时间
+                    $.ajax({
+                        crossDomain: true,
+                        contentType: 'application/json;charset=UTF-8',
+                        url: self.urlHeader + '/api/p/' + urlBottom,
+                        data: data,
+                        type: 'post',
+                        success: function(data) {
+                            console.log(data)
+                            //拿到查询花费时间
+                            if (data.Error) {
+                                self.queryTimes[2].queryTime = -1
+                                self.queryTimes[2].databaseType = data.Error
+                            } else {
+                                //拿到查询花费时间
+                                self.queryTimes[2].queryTime = parseInt(data.queryTime.substring(0, data.queryTime.length - 2))
+                                //如果hive不支持该查询
+                                if (self.queryTimes[1].databaseType != "Hive") {
+                                    self.ifChartShows = true
+                                    self.loading = false
+                                }
+                            }
+                        },
+                        error: function(XMLHttpRequest, textStatus, errorThrown) {
+                            //TODO: 处理status， http status code，超时 408
+                            // 注意：如果发生了错误，错误信息（第二个参数）除了得到null之外，还可能
+                            //是"timeout", "error", "notmodified" 和 "parsererror"
+                            self.queryTimes[2].queryTime = -1
+                            if (textStatus == "timeout") {
+                                self.queryTimes[2].databaseType = "HBase查询timeout"
+                            } else {
+                                self.queryTimes[2].databaseType = "网络错误"
+                            }
+                        },
+                        dataType: 'json',
+                    })
+                    //HIVE查询获取查询时间
+                    $.ajax({
+                        crossDomain: true,
+                        contentType: 'application/json;charset=UTF-8',
+                        url: self.urlHeader + '/api/h/' + urlBottom,
+                        data: data,
+                        type: 'post',
+                        success: function(data) {
+                            console.log(data)
+                            if (data.Error) {
+                                self.queryTimes[1].queryTime = -1
+                                self.queryTimes[1].databaseType = data.Error
+                            } else {
+                                //拿到查询花费时间
+                                self.queryTimes[1].queryTime = parseInt(data.queryTime.substring(0, data.queryTime.length - 2))
+                                self.loading = false
+                                self.ifChartShows = true
+                            }
+                        },
+                        error: function(XMLHttpRequest, textStatus, errorThrown) {
+                            //TODO: 处理status， http status code，超时 408
+                            // 注意：如果发生了错误，错误信息（第二个参数）除了得到null之外，还可能
+                            //是"timeout", "error", "notmodified" 和 "parsererror"
+                            self.loading = false
+                            self.queryTimes[1].queryTime = -1
+                            if (textStatus == "timeout") {
+                                self.queryTimes[1].databaseType = "Hive查询timeout"
+                            } else {
+                                self.queryTimes[1].databaseType = "网络错误"
+                            }
+                        },
+                        dataType: 'json',
+                        timeout: 50000,
+                    })
+                    //Neo4j查询获取查询时间
+                    $.ajax({
+                        crossDomain: true,
+                        contentType: 'application/json;charset=UTF-8',
+                        url: self.urlHeader + '/api/n/' + urlBottom,
+                        data: data,
+                        type: 'post',
+                        success: function(data) {
+                            console.log(data)
+                            //拿到查询花费时间
+                            // self.queryTimes.push({
+                            //     databaseType: data.databaseType,
+                            //     queryTime: data.queryTime
+                            // })
+                        },
+                        error: function(err) {
+                            console.log(err)
+                        },
+                        dataType: 'json',
+                    })
+                }
+                //根据时间查询电影
                 function searchMoviesAccordingToTime(urlBottom, year, season, month, day) {
+                    self.ifSearchByOtherFactors = false
                     //使用mysql查询获取数据和查询时间
                     $.ajax({
                         crossDomain: true,
@@ -374,12 +581,17 @@
                         success: function(data) {
                             console.log(data)
                             //拿到数据
-                            self.searchResult = data.movie
+                            if (data.movies) {
+                                self.searchResult = data.movies
+                            } else {
+                                self.searchResult = data.movie
+                            }
                             //拿到查询花费时间
-                            self.queryTimes.push({
-                                databaseType: data.databaseType,
-                                queryTime: data.queryTime
-                            })
+                            self.queryTimes[0].queryTime = parseInt(data.queryTime.substring(0, data.queryTime.length - 2))
+                            //裁剪数据
+                            if(self.searchResult.length > 50) {
+                                self.searchResult = self.searchResult.slice(0, 49)
+                            }
                         },
                         error: function(err) {
                             console.log(err)
@@ -402,13 +614,29 @@
                         success: function(data) {
                             console.log(data)
                             //拿到查询花费时间
-                            self.queryTimes.push({
-                                databaseType: data.databaseType,
-                                queryTime: data.queryTime
-                            })
+                            if (data.Error) {
+                                self.queryTimes[2].queryTime = -1
+                                self.queryTimes[2].databaseType = data.Error
+                            } else {
+                                //拿到查询花费时间
+                                self.queryTimes[2].queryTime = parseInt(data.queryTime.substring(0, data.queryTime.length - 2))
+                                //如果hive不支持该查询
+                                if (self.queryTimes[1].databaseType != "Hive") {
+                                    self.ifChartShows = true
+                                    self.loading = false
+                                }
+                            }
                         },
-                        error: function(err) {
-                            console.log(err)
+                        error: function(XMLHttpRequest, textStatus, errorThrown) {
+                            //TODO: 处理status， http status code，超时 408
+                            // 注意：如果发生了错误，错误信息（第二个参数）除了得到null之外，还可能
+                            //是"timeout", "error", "notmodified" 和 "parsererror"
+                            self.queryTimes[2].queryTime = -1
+                            if (textStatus == "timeout") {
+                                self.queryTimes[2].databaseType = "HBase查询timeout"
+                            } else {
+                                self.queryTimes[2].databaseType = "网络错误"
+                            }
                         },
                         dataType: 'json',
                     })
@@ -427,23 +655,26 @@
                         type: 'post',
                         success: function(data) {
                             console.log(data)
-                            //拿到查询花费时间
-                            self.queryTimes.push({
-                                databaseType: data.databaseType,
-                                queryTime: data.queryTime
-                            })
-                            self.queryTimesComparedChartDraw()
+                            if (data.Error) {
+                                self.queryTimes[1].queryTime = -1
+                                self.queryTimes[1].databaseType = data.Error
+                            } else {
+                                //拿到查询花费时间
+                                self.queryTimes[1].queryTime = parseInt(data.queryTime.substring(0, data.queryTime.length - 2))
+                                self.loading = false
+                                self.ifChartShows = true
+                            }
                         },
                         error: function(XMLHttpRequest, textStatus, errorThrown) {
                             //TODO: 处理status， http status code，超时 408
                             // 注意：如果发生了错误，错误信息（第二个参数）除了得到null之外，还可能
                             //是"timeout", "error", "notmodified" 和 "parsererror"
+                            self.loading = false
+                            self.queryTimes[1].queryTime = -1
                             if (textStatus == "timeout") {
-                                self.queryTimes.push({
-                                    databaseType: "HIVE",
-                                    queryTime: "-1ms"
-                                })
-                                self.queryTimesComparedChartDraw()
+                                self.queryTimes[1].databaseType = "Hive查询timeout"
+                            } else {
+                                self.queryTimes[1].databaseType = "网络错误"
                             }
                         },
                         dataType: 'json',
@@ -465,10 +696,10 @@
                         success: function(data) {
                             console.log(data)
                             //拿到查询花费时间
-                            self.queryTimes.push({
-                                databaseType: data.databaseType,
-                                queryTime: data.queryTime
-                            })
+                            // self.queryTimes.push({
+                            //     databaseType: data.databaseType,
+                            //     queryTime: data.queryTime
+                            // })
                         },
                         error: function(err) {
                             console.log(err)
@@ -543,22 +774,112 @@
                     searchMoviesAccordingToTime('year/month/day', parseInt(time[0]), [false, false, false, false], monthChosen, weekdayChosen)
                 } else if (!flags[4]) {
                     //根据电影名查找电影并且将拿到的值赋给searchresult
+                    searchMoviesAccordingToOtherFactors('movie/name/like', JSON.stringify({
+                        name: self.inputMovie
+                    }))
                 } else if (!flags[5]) {
+                    //判断必要条件
+                    if (!self.ifClickSuggestionList) {
+                        alert("请在自动补全中选择")
+                    }
                     //根据导演查找电影并且将拿到的值赋给searchresult
-                    //在director.json中找出导演id，作为cache，只要包含了输入的字符串就取出导演的id；
                     let directors = Director.director
-                    var directorId = []
                     for (var i = 0; i < directors.length; i++) {
-                        if (directors[i].key.indexOf(this.inputDirector) + 1) {
-                            directorId.push(directors[i].id)
+                        if (directors[i].key == this.inputDirector) {
+                            searchMoviesAccordingToOtherFactors('movie/director/id', JSON.stringify({
+                                director_id: directors[i].id
+                            }))
                         }
                     }
                 } else if (!flags[6]) {
+                    //判断必要条件
+                    if (!self.ifClickSuggestionList) {
+                        alert("请在自动补全中选择")
+                    }
                     //根据演员查找电影并且将拿到的值赋给searchresult
+                    let actors = Actor.actor
+                    for (var i = 0; i < actors.length; i++) {
+                        if (actors[i].key == this.inputActor) {
+                            searchMoviesAccordingToOtherFactors('movie/actor/id', JSON.stringify({
+                                actor_id: actors[i].id,
+                                staring: true,
+                                supporting: true
+                            }))
+                        }
+                    }
                 } else if (!flags[7]) {
-                    //组合查询
+                    //判断必要条件
+                    if (!self.ifClickSuggestionList) {
+                        alert("请在自动补全中选择")
+                    }
+                    //组合查询1
+                    //根据演员查找电影并且将拿到的值赋给searchresult
+                    let actors = Actor.actor
+                    var actor_id = 0
+                    for (var i = 0; i < actors.length; i++) {
+                        if (actors[i].key == this.combinedSearch1.actor) {
+                            actor_id = actors[i].id
+                        }
+                    }
+                    //根据导演查找电影并且将拿到的值赋给searchresult
+                    let directors = Director.director
+                    var director_id = 0
+                    for (var i = 0; i < directors.length; i++) {
+                        if (directors[i].key == this.combinedSearch1.director) {
+                            director_id = directors[i].id
+                        }
+                    }
+                    searchMoviesAccordingToOtherFactors('movie/director/with/actor', JSON.stringify({
+                        actor_id: parseInt(actor_id),
+                        director_id: parseInt(director_id),
+                    }))
+                } else if (!flags[11]) {
+                    //判断必要条件
+                    if (!self.ifClickSuggestionList) {
+                        alert("请在自动补全中选择")
+                    }
+                    //组合查询2
+                    //根据演员查找电影并且将拿到的值赋给searchresult
+                    let actors = Actor.actor
+                    var actor_id
+                    for (var i = 0; i < actors.length; i++) {
+                        if (actors[i].key == this.combinedSearch2.actor) {
+                            actor_id = actors[i].id
+                        }
+                    }
+                    searchMoviesAccordingToOtherFactors('movie/actor/id/year', JSON.stringify({
+                        actor_id: actor_id,
+                        year: this.combinedSearch2.year,
+                    }))
+                } else if (!flags[8]) {
+                    //判断必要条件
+                    if (!self.ifClickSuggestionList) {
+                        alert("请在自动补全中选择")
+                    }
+                    //根据电影类型查找电影并且将拿到的值赋给searchresult
+                    let categories = Category.category
+                    for (var i = 0; i < categories.length; i++) {
+                        if (categories[i].key == this.inputType) {
+                            searchMoviesAccordingToOtherFactors('movie/category/id', JSON.stringify({
+                                category_id: categories[i].id
+                            }))
+                        }
+                    }
+                } else if (!flags[9]) {
+                    //根据电影排名查找电影并且将拿到的值赋给searchresult
+                    searchMoviesAccordingToOtherFactors('movie/ranking/between', JSON.stringify({
+                        max: self.inputRank.max,
+                        min: self.inputRank.min
+                    }))
+                } else if (!flags[10]) {
+                    //根据电影排名查找电影并且将拿到的值赋给searchresult
+                    searchMoviesAccordingToOtherFactors('movie/review/between', JSON.stringify({
+                        max: self.inputMark.max,
+                        min: self.inputMark.min
+                    }))
                 } else {
-                    //未输入任何查询关键字，直接取50条记录
+                    //未输入任何查询关键字
+                    alert("请选择关键字进行查询")
                 }
                 self.ifMovieQueryShow = true
                 self.ifHitoryOrderShow = false
@@ -590,47 +911,72 @@
                         self.inputMovie = ''
                     }
                     if (flags[5]) {
+                        self.ifClickSuggestionList = false
                         self.inputDirector = ''
                     }
                     if (flags[6]) {
+                        self.ifClickSuggestionList = false
                         self.inputActor = ''
                     }
                     if (flags[7]) {
-                        self.combinedSearch.year = ''
-                        self.combinedSearch.director = ''
-                        self.combinedSearch.actor = ''
+                        self.ifClickSuggestionList = false
+                        self.combinedSearch1.director = ''
+                        self.combinedSearch1.actor = ''
                     }
-                    if(flags[8]) {
+                    if (flags[8]) {
+                        self.ifClickSuggestionList = false
                         self.inputType = ''
+                    }
+                    if (flags[9]) {
+                        self.inputRank.min = 0
+                        self.inputRank.max = 0
+                    }
+                    if (flags[10]) {
+                        self.inputMark.min = 0
+                        self.inputMark.max = 0
+                    }
+                    if (flags[11]) {
+                        self.ifClickSuggestionList = false
+                        self.combinedSearch2.year = ''
+                        self.combinedSearch2.actor = ''
                     }
                 }
                 switch (keyword) {
                     case 'year':
-                        self.paramFlags = [false, true, true, true, true, true, true, true, true]
+                        self.paramFlags = [false, true, true, true, true, true, true, true, true, true, true, true]
                         break
                     case 'season':
-                        self.paramFlags = [true, false, true, true, true, true, true, true, true]
+                        self.paramFlags = [true, false, true, true, true, true, true, true, true, true, true, true]
                         break
                     case 'month':
-                        self.paramFlags = [true, true, false, true, true, true, true, true, true]
+                        self.paramFlags = [true, true, false, true, true, true, true, true, true, true, true, true]
                         break
                     case 'date':
-                        self.paramFlags = [true, true, true, false, true, true, true, true, true]
+                        self.paramFlags = [true, true, true, false, true, true, true, true, true, true, true, true]
                         break
                     case 'movieName':
-                        self.paramFlags = [true, true, true, true, false, true, true, true, true]
+                        self.paramFlags = [true, true, true, true, false, true, true, true, true, true, true, true]
                         break
                     case 'director':
-                        self.paramFlags = [true, true, true, true, true, false, true, true, true]
+                        self.paramFlags = [true, true, true, true, true, false, true, true, true, true, true, true]
                         break
                     case 'actor':
-                        self.paramFlags = [true, true, true, true, true, true, false, true, true]
+                        self.paramFlags = [true, true, true, true, true, true, false, true, true, true, true, true]
                         break
-                    case 'combinedSearch':
-                        self.paramFlags = [true, true, true, true, true, true, true, false, true]
+                    case 'combinedSearch1':
+                        self.paramFlags = [true, true, true, true, true, true, true, false, true, true, true, true]
                         break
                     case 'type':
-                        self.paramFlags = [true, true, true, true, true, true, true, true, false]
+                        self.paramFlags = [true, true, true, true, true, true, true, true, false, true, true, true]
+                        break
+                    case 'rank':
+                        self.paramFlags = [true, true, true, true, true, true, true, true, true, false, true, true]
+                        break
+                    case 'mark':
+                        self.paramFlags = [true, true, true, true, true, true, true, true, true, true, false, true]
+                        break
+                    case 'combinedSearch2':
+                        self.paramFlags = [true, true, true, true, true, true, true, true, true, true, true, false]
                         break
                 }
                 emptySpecifiedParam()
@@ -686,8 +1032,59 @@
                         }
                     });
             },
-            queryTimesComparedChartDraw: function() {},
-        }
+            querySearch: function(queryString, cb) {
+                let self = this
+                var suggestionList = []
+                function getSuggesrionList(keyword) {
+                    suggestionList = []
+                    //决定keyword
+                    switch (keyword) {
+                        case 'director':
+                            var directors = Director.director
+                            for (var i = 0; i < directors.length; i++) {
+                                if (directors[i].key.toLowerCase().indexOf(queryString) == 0) {
+                                    suggestionList.push({
+                                        value: directors[i].key
+                                    })
+                                }
+                            }
+                            break
+                        case 'actor':
+                            var actors = Actor.actor
+                            for (var i = 0; i < actors.length; i++) {
+                                if (actors[i].key.toLowerCase().indexOf(queryString) == 0) {
+                                    suggestionList.push({
+                                        value: actors[i].key
+                                    })
+                                }
+                            }
+                            break
+                        case 'category':
+                            var categories = Category.category
+                            for (var i = 0; i < categories.length; i++) {
+                                if (categories[i].key.toLowerCase().indexOf(queryString) == 0) {
+                                    suggestionList.push({
+                                        value: categories[i].key
+                                    })
+                                }
+                            }
+                            break
+                    }
+                }
+                if (self.inputDirector.length != 0 || self.combinedSearch1.director.length != 0) {
+                    getSuggesrionList('director')
+                } else if (self.inputActor.length != 0 || self.combinedSearch1.actor.length != 0 || self.combinedSearch2.actor.length != 0) {
+                    getSuggesrionList('actor')
+                } else if (self.inputType.length != 0) {
+                    getSuggesrionList('category')
+                }
+                // 调用 callback 返回建议列表的数据
+                cb(suggestionList);
+            },
+            handleSelect: function() {
+                this.ifClickSuggestionList = true
+            },
+        },
     }
 </script>
 
