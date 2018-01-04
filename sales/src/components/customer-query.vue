@@ -251,7 +251,8 @@
                     </el-collapse-transition>
                     <el-collapse-transition>
                         <div v-show="ifHitoryOrderShow">
-                            <el-table :data="searchResult" style="width: 100%; text-align: left">
+                            <!-- <el-table :data="searchResult" style="width: 100%; text-align: left"> -->
+                            <el-table :data="historyOrders" style="width: 100%; text-align: left">
                                 <el-table-column type="expand">
                                     <div slot-scope="searchResult">
                                         <el-form label-position="left">
@@ -282,18 +283,36 @@
                                         </el-form>
                                     </div>
                                 </el-table-column>
-                                <el-table-column label="电影名称" prop="id">
+                                <el-table-column label="订单ID" prop="id">
                                 </el-table-column>
-                                <el-table-column label="发行日期" prop="name">
+                                <el-table-column label="订单名" prop="title">
                                 </el-table-column>
-                                <el-table-column label="主要演员" prop="desc">
+                                <el-table-column label="订单描述" prop="description">
                                 </el-table-column>
-                                <el-table-column label="售价" prop="desc">
+                                <el-table-column label="订单地址" prop="address">
+                                </el-table-column>
+                                <el-table-column label="电影ID" prop="productId">
+                                </el-table-column>
+                                <el-table-column label="价格" prop="price">
                                 </el-table-column>
                                 <el-table-column fixed="right" label="操作" width="100">
                                     <div slot-scope="scope">
-                                        <el-button @click="movieBuying(scope.row)" type="text" size="small">退货</el-button>
-                                        <el-button @click="movieBuying(scope.row)" type="text" size="small">投诉</el-button>
+                                        <el-button @click="orderReturns(scope.row)" type="text" size="small">退货</el-button>
+                                        <el-button @click="feedbackVisible=true" type="text" size="small">投诉</el-button>
+                                            <el-dialog title="反馈" :visible.sync="feedbackVisible">
+                                                <el-form :model="feedbackData">
+                                                    <el-form-item label="反馈标题" label-width="120">
+                                                    <el-input v-model="feedbackData.title"></el-input>
+                                                    </el-form-item>
+                                                    <el-form-item label="反馈内容" label-width="120">
+                                                        <el-input v-model="feedbackData.content"></el-input>
+                                                    </el-form-item>
+                                                </el-form>
+                                                <div slot="footer" class="dialog-footer">
+                                                    <el-button @click="feedbackVisible = false">取 消</el-button>
+                                                    <el-button type="primary" @click="createFeedback()">确 定</el-button>
+                                                </div>
+                                            </el-dialog>
                                     </div>
                                 </el-table-column>
                             </el-table>
@@ -409,6 +428,14 @@
                 loading: false,
                 ifChartShows: false,
                 total: 0,
+                historyOrders: [],
+                feedTitle: '',
+                feedContent: '',
+                feedbackVisible: false,
+                feedbackData: {
+                    content: '',
+                    title: ''
+                },
             }
         },
         components: {
@@ -1084,7 +1111,122 @@
             handleSelect: function() {
                 this.ifClickSuggestionList = true
             },
+            createOrder(){
+                let self = this;
+                $.ajax({
+                    crossDomain: true,
+                    // xhrFields: {
+                    //     withCredentials: true
+                    // },
+                    dataType: "json",
+                    data: JSON.stringify({
+                        title: "order3",
+                        description: "order3des",
+                        address: "orderAddress",
+                        productIds: [5,7,3,4],
+                        total_price: 50,
+                        quantity: 3
+                    }),
+                    contentType: "application/json;charset=UTF-8",
+                    url: "http://10.60.43.111:16666/createOrder",
+                    type: "post",
+                    success: function(data) {
+                        console.log(data)
+
+                    }
+                });
+            },
+            queryForHistoryOrder() {
+                let self = this;
+                $.ajax({
+                    crossDomain: true,
+                    // xhrFields: {
+                    //     withCredentials: true
+                    // },
+                    dataType: "json",
+                    data: JSON.stringify({
+                        userName: "buyer",
+                        passWord: "buyer"
+                    }),
+                    contentType: "application/json;charset=UTF-8",
+                    url: "http://10.60.43.111:16666/getOrdersOfBuyer",
+                    type: "post",
+                    success: function(data) {
+                        console.log(data)
+                        var i
+                        for (i in data) {
+                            var j
+                            for(j in data[i]){
+                                var temp = {id:'',
+                                            title:'',
+                                            description: '',
+                                            address: '',
+                                            productId: '',
+                                            price: ''}
+                                temp.id = data[i][j].ID
+                                temp.title = data[i][j].TITLE
+                                temp.description = data[i][j].DESCRIPTION
+                                temp.address = data[i][j].ADDRESS
+                                temp.productId = data[i][j].PRODUCTIDS
+                                temp.price = data[i][j].TOTAL_PRICE
+                                self.historyOrders.push(temp)
+                            }
+                        }
+                    }
+                });
+            },
+            orderReturns(id) {
+                let self = this;
+                console.log(id.id)
+                $.ajax({
+                    crossDomain: true,
+                    // xhrFields: {
+                    //     withCredentials: true
+                    // },
+                    dataType: "json",
+                    data: JSON.stringify({
+                        id: id.id,
+                    }),
+                    contentType: "application/json;charset=UTF-8",
+                    url: "http://10.60.43.111:16666/idr",
+                    type: "post",
+                    success: function(data) {
+                        console.log(data)
+                        self.$message({
+                            message: "成功发起退货！",
+                            type: 'success'
+                        })
+                    }
+                });
+            },
+            createFeedback(){
+                this.feedbackVisible = false
+                let self = this;
+                // console.log(self.feedbackData.content, self.feedbackData.title)
+                $.ajax({
+                    crossDomain: true,
+                    dataType: "json",
+                    data: JSON.stringify({
+                        feedbackAdvice: self.feedbackData.content,
+                        feedbackName: self.feedbackData.title
+                    }),
+                    contentType: "application/json;charset=UTF-8",
+                    url: "http://10.60.43.111:16666/feedback",
+                    type: "post",
+                    success: function(data) {
+                        console.log(data)
+                        self.$message({
+                            message: "反馈成功",
+                            type: 'success'
+                        })
+                    }
+                });
+            }
+
         },
+        mounted() {
+            this.queryForHistoryOrder()
+        }
     }
 </script>
 
