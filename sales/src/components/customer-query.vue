@@ -1188,7 +1188,7 @@
                         id: id.id,
                     }),
                     contentType: "application/json;charset=UTF-8",
-                    url: "http://10.60.43.111:16666/idr",
+                    url: "http://10.60.43.111:16666/returnOrder",
                     type: "post",
                     success: function(data) {
                         console.log(data)
